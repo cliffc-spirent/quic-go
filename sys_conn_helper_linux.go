@@ -118,6 +118,17 @@ func isPermissionError(err error) bool {
 	return false
 }
 
+// When dhcp is renewed the routes may drop for a millesecond
+// causing any call to sendmsg to fail
+func isTransientNetworkError(err error) bool {
+	var serr *os.SyscallError
+	if errors.As(err, &serr) {
+		return serr.Syscall == "sendmsg" &&
+			(serr.Err == unix.ENETUNREACH || serr.Err == unix.EHOSTUNREACH)
+	}
+	return false
+}
+
 func isECNEnabled() bool {
 	return kernelVersionMajor >= 5 && !isECNDisabledUsingEnv()
 }

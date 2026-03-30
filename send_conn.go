@@ -90,6 +90,8 @@ func (c *sconn) Write(p []byte, gsoSize uint16, ecn protocol.ECN) error {
 			p = p[l:]
 		}
 		return nil
+	} else if err != nil && isTransientNetworkError(err) {
+		return nil // treat as dropped packet, let QUIC retransmit
 	}
 	return err
 }
